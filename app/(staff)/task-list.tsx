@@ -1,239 +1,255 @@
-import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
+import { useRouter } from 'expo-router';
 
-const data = [
-    { id: '1', task: 'Thay hoa', location: 'k10', time: '09:00', deadline: '2024-11-02', status: 'Chờ xác nhận', action: 'Xác nhận' },
-    { id: '2', task: 'Quét lá', location: 'k10', time: '14:00', deadline: '2024-11-29', status: 'Chờ xác nhận', action: 'Xác nhận' },
-    { id: '3', task: 'Thay cây', location: 'k10', time: '10:00', deadline: '2024-10-30', status: 'Chờ xác nhận', action: 'Xác nhận' },
-    { id: '4', task: 'Tưới cây', location: 'k10', time: '10:00', deadline: '2024-11-5', status: 'Chờ xác nhận', action: 'Xác nhận' },
+// Dữ liệu mẫu nhiệm vụ (Sample task data)
+const NHIEM_VU_MAU = [
+  {
+    id: '1',
+    tieuDe: 'Kiểm Tra Khu Tưởng Niệm',
+    moTa: 'Kiểm tra và ghi chép tình trạng các bia mộ tại khu tưởng niệm liệt sĩ',
+    ngayDenHan: '2024-11-05',
+    doUuTien: 'cao',
+    trangThai: 'dangXuLy',
+    diaDiem: 'Khu 20'
+  },
+  {
+    id: '2',
+    tieuDe: 'Bảo Trì Nghĩa Trang',
+    moTa: 'Sửa chữa hệ thống tưới nước và làm sạch khu vực mộ',
+    ngayDenHan: '2024-11-03',
+    doUuTien: 'trungBinh',
+    trangThai: 'chuaBatDau',
+    diaDiem: 'Khu 2'
+  },
+  {
+    id: '3',
+    tieuDe: 'Cập Nhật Hồ Sơ',
+    moTa: 'Số hóa và cập nhật thông tin hồ sơ liệt sĩ mới',
+    ngayDenHan: '2024-11-10',
+    doUuTien: 'cao',
+    trangThai: 'hoantThanh',
+    diaDiem: 'Khu 1'
+  }
 ];
 
-const TaskManagement = () => {
-    const [selectedFilter, setSelectedFilter] = useState('all');
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [dateType, setDateType] = useState('start'); // 'start' or 'end'
-    const [startDate, setStartDate] = useState(new Date());
-    const [endDate, setEndDate] = useState(new Date());
-    const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-    const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-    const router = useRouter();
-    const handleFilterSelect = (filter) => {
-        setSelectedFilter(filter);
+const TaskListScreen = () => {
+  const router = useRouter();
+  const [taskList, setTaskList] = useState(NHIEM_VU_MAU);
+  const [selectedFilter, setSelectedFilter] = useState('all');
+
+  // Hàm chuyển đổi trạng thái sang tiếng Việt
+  const convertStatusToVietnamese = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'chuaBatDau': 'Chưa Bắt Đầu',
+      'dangXuLy': 'Đang Xử Lý',
+      'hoantThanh': 'Hoàn Thành'
     };
+    return statusMap[status] || status;
+  };
 
-    const handleConfirm = (date) => {
-        if (dateType === 'start') {
-            setStartDate(date);
-        } else {
-            setEndDate(date);
-        }
-        setShowDatePicker(false);
-    };
+  // Hàm lấy style badge trạng thái
+  const getStatusBadgeStyle = (status: string) => {
+    switch (status) {
+      case 'hoantThanh': return styles.completedStatus;
+      case 'dangXuLy': return styles.inProgressStatus;
+      case 'chuaBatDau': return styles.pendingStatus;
+      default: return styles.pendingStatus;
+    }
+  };
 
-    const handleStartDateConfirm = (date) => {
-        setStartDate(date);
-        setShowStartDatePicker(false);
-    };
-
-    const handleEndDateConfirm = (date) => {
-        setEndDate(date);
-        setShowEndDatePicker(false);
-    };
-
-    // Function to determine the priority based on the deadline
-    const getPriority = (deadline) => {
-        const currentDate = new Date();
-        const deadlineDate = new Date(deadline);
-        const timeDiff = deadlineDate.getTime() - currentDate.getTime();
-        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)); // Convert milliseconds to days
-
-        if (daysDiff < 2) {
-            return { label: 'Cao', color: 'red' }; // High priority
-        } else if (daysDiff >= 2 && daysDiff <= 4) {
-            return { label: 'Trung Bình', color: '#FFCC00' }; // Medium priority
-        } else {
-            return { label: 'Thấp', color: 'green' }; // Low priority
-        }
-    };
-
-    const renderItem = ({ item }) => {
-        const currentDate = new Date();
-        const deadlineDate = new Date(item.deadline);
-        const isOverdue = deadlineDate < currentDate; // Check if the deadline is overdue
-        const priority = getPriority(item.deadline); // Get priority object
-
-        return (
-            <TouchableOpacity onPress={() => router.push('/task-details')}>
-                <View style={styles.row}>
-                    <Text style={styles.cell}>{item.task}</Text>
-                    <Text style={styles.cell}>{item.location}</Text>
-                    <Text style={[styles.cell, { color: priority.color }]}>{isOverdue ? 'QUÁ HẠN' : item.status}</Text>
-                    <Text style={[styles.cell, { color: priority.color }]}>{isOverdue ? priority.label : priority.label}</Text>
-                </View>
-            </TouchableOpacity>
-        );
-    };
-
-    const formatDate = (date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-    };
-
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Quản Lý Công Việc</Text>
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                    style={[styles.filterButton, selectedFilter === 'all' && styles.selectedButton]}
-                    onPress={() => handleFilterSelect('all')}
-                >
-                    <Text style={styles.buttonText}>Tất cả</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterButton, selectedFilter === 'completed' && styles.selectedButton]}
-                    onPress={() => handleFilterSelect('completed')}
-                >
-                    <Text style={styles.buttonText}>Đã hoàn thành</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.filterButton, selectedFilter === 'notCompleted' && styles.selectedButton]}
-                    onPress={() => handleFilterSelect('notCompleted')}
-                >
-                    <Text style={styles.buttonText}>Chưa hoàn thành</Text>
-                </TouchableOpacity>
-            </View>
-            <View style={styles.dateContainer}>
-                <TouchableOpacity style={styles.startDateButton} onPress={() => setShowStartDatePicker(true)}>
-                    <Text style={styles.dateLabel}>Từ ngày: {formatDate(startDate)}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.endDateButton} onPress={() => setShowEndDatePicker(true)}>
-                    <Text style={styles.dateLabel}>Đến ngày: {formatDate(endDate)}</Text>
-                </TouchableOpacity>
-            </View>
-
-            <DateTimePickerModal
-                isVisible={showStartDatePicker}
-                mode="date"
-                onConfirm={handleStartDateConfirm}
-                onCancel={() => setShowStartDatePicker(false)}
-                date={startDate}
-            />
-            <DateTimePickerModal
-                isVisible={showEndDatePicker}
-                mode="date"
-                onConfirm={handleEndDateConfirm}
-                onCancel={() => setShowEndDatePicker(false)}
-                date={endDate}
-            />
-
-            <View style={styles.header}>
-                <Text style={styles.headerText}>Công việc</Text>
-                <Text style={styles.headerText}>Vị trí</Text>
-                <Text style={styles.headerText}>Trạng thái</Text>
-                <Text style={styles.headerText}>Độ ưu tiên</Text>
-            </View>
-            <FlatList
-                data={data}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.listContainer}
-            />
+  // Render từng nhiệm vụ
+  const renderTaskItem = ({ item }: { item: typeof NHIEM_VU_MAU[0] }) => (
+    <TouchableOpacity
+      style={styles.taskCard}
+      onPress={() => {
+        router.push({
+          pathname: '/task-details',
+          params: { taskId: item.id }
+        });
+      }}
+    >
+      <View style={styles.taskHeader}>
+        <Text style={styles.taskTitle}>{item.tieuDe}</Text>
+      </View>
+      <Text style={styles.taskDescription} numberOfLines={2}>
+        {item.moTa}
+      </Text>
+      <View style={styles.additionalInfo}>
+        <Text style={styles.taskLocation}>📍 {item.diaDiem}</Text>
+      </View>
+      <View style={styles.taskFooter}>
+        <Text style={styles.dueDate}>Đến Hạn: {item.ngayDenHan}</Text>
+        <View style={[styles.statusBadge, getStatusBadgeStyle(item.trangThai)]}>
+          <Text style={styles.statusText}>
+            {convertStatusToVietnamese(item.trangThai)}
+          </Text>
         </View>
-    );
+      </View>
+    </TouchableOpacity>
+  );
+
+  // Add this new function to filter tasks
+  const getFilteredTasks = () => {
+    if (selectedFilter === 'all') {
+      return taskList;
+    }
+    return taskList.filter(task => task.trangThai === selectedFilter);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Nhiệm Vụ Của Tôi</Text>
+      </View>
+
+      <View style={styles.filterContainer}>
+        {[
+          { id: 'all', label: 'Tất Cả' },
+          { id: 'chuaBatDau', label: 'Chưa Bắt Đầu' },
+          { id: 'dangXuLy', label: 'Đang Xử Lý' },
+          { id: 'hoantThanh', label: 'Hoàn Thành' }
+        ].map((filter) => (
+          <TouchableOpacity
+            key={filter.id}
+            style={[
+              styles.filterButton,
+              selectedFilter === filter.id && styles.activeFilterButton,
+            ]}
+            onPress={() => setSelectedFilter(filter.id)}
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                selectedFilter === filter.id && styles.activeFilterButtonText,
+              ]}
+            >
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <FlatList
+        data={getFilteredTasks()}
+        renderItem={renderTaskItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+      />
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f9f9f9',
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
-        color: '#333',
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginBottom: 15,
-    },
-    filterButton: {
-        backgroundColor: 'white',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 5,
-        borderWidth: 1,
-        borderColor: '#ccc',
-    },
-    selectedButton: {
-        backgroundColor: '#007BFF',
-    },
-    buttonText: {
-        color: '#333',
-        fontWeight: 'bold',
-    },
-    dateContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 15,
-    },
-    dateLabel: {
-        marginRight: 10,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    dateInput: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        flex: 1,
-        borderRadius: 5,
-        backgroundColor: 'white',
-        color: 'black',
-    },
-    header: {
-        flexDirection: 'row',
-        backgroundColor: '#e0e0e0',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 10,
-    },
-    headerText: {
-        flex: 1,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
-    row: {
-        flexDirection: 'row',
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-        backgroundColor: 'white',
-        borderRadius: 5,
-        marginBottom: 5,
-    },
-    cell: {
-        flex: 2,
-        textAlign: 'center',
-    },
-    actionButton: {
-        backgroundColor: '#007BFF',
-        padding: 5,
-        borderRadius: 5,
-    },
-    actionText: {
-        color: 'white',
-    },
-    listContainer: {
-        paddingBottom: 20,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  header: {
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    borderRadius: 16,
+    backgroundColor: '#F0F0F0',
+  },
+  activeFilterButton: {
+    backgroundColor: '#007AFF',
+  },
+  filterButtonText: {
+    color: '#666666',
+    fontSize: 12,
+  },
+  activeFilterButtonText: {
+    color: '#FFFFFF',
+  },
+  listContainer: {
+    padding: 16,
+  },
+  taskCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  taskHeader: {
+    marginBottom: 8,
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  taskDescription: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 12,
+  },
+  additionalInfo: {
+    marginBottom: 8,
+  },
+  taskLocation: {
+    fontSize: 12,
+    color: '#007AFF',
+  },
+  taskFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dueDate: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  completedStatus: {
+    backgroundColor: '#E8F5E9',
+  },
+  inProgressStatus: {
+    backgroundColor: '#FFF3E0',
+  },
+  pendingStatus: {
+    backgroundColor: '#FFEBEE',
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#333333',
+  },
 });
 
-export default TaskManagement; 
+export default TaskListScreen;
