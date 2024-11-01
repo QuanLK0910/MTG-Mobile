@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Make sure to install this package if not already done
+import { Ionicons } from '@expo/vector-icons'; 
 import DateTimePicker from '@react-native-community/datetimepicker'; // Import DateTimePicker
 
 // Reusable Input Component
@@ -48,7 +48,6 @@ const ProfileScreen: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Thông tin tài khoản</Text>
             <TouchableOpacity onPress={handleImagePick} style={styles.avatarContainer}>
                 {avatar ? (
                     <Image source={{ uri: avatar }} style={styles.avatar} />

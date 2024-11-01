@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -17,7 +18,7 @@ const TaskManagement = () => {
     const [endDate, setEndDate] = useState(new Date());
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-
+    const router = useRouter();
     const handleFilterSelect = (filter) => {
         setSelectedFilter(filter);
     };
