@@ -3,10 +3,10 @@ import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet } from 'r
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 const data = [
-    { id: '1', task: 'Thay hoa', location: 'k10', time: '09:00', deadline: '09:00', status: 'Chờ xác nhận', action: 'Xác nhận' },
-    { id: '2', task: 'Quét lá', location: 'k10', time: '14:00', deadline: '09:00', status: 'Chờ xác nhận', action: 'Xác nhận' },
-    { id: '3', task: 'Thay cây', location: 'k10', time: '10:00', deadline: '09:00', status: 'Chờ xác nhận', action: 'Xác nhận' },
-
+    { id: '1', task: 'Thay hoa', location: 'k10', time: '09:00', deadline: '2024-11-02', status: 'Chờ xác nhận', action: 'Xác nhận' },
+    { id: '2', task: 'Quét lá', location: 'k10', time: '14:00', deadline: '2024-11-29', status: 'Chờ xác nhận', action: 'Xác nhận' },
+    { id: '3', task: 'Thay cây', location: 'k10', time: '10:00', deadline: '2024-10-30', status: 'Chờ xác nhận', action: 'Xác nhận' },
+    { id: '4', task: 'Tưới cây', location: 'k10', time: '10:00', deadline: '2024-11-5', status: 'Chờ xác nhận', action: 'Xác nhận' },
 ];
 
 const TaskManagement = () => {
@@ -29,17 +29,39 @@ const TaskManagement = () => {
         setShowDatePicker(false);
     };
 
-    const renderItem = ({ item }) => (
-        <View style={styles.row}>
-            <Text style={styles.cell}>{item.task}</Text>
-            <Text style={styles.cell}>{item.location}</Text>
-            <Text style={styles.cell}>{item.deadline}</Text>
-            <Text style={styles.cell}>{item.status}</Text>
-            <TouchableOpacity style={styles.actionButton}>
-                <Text style={styles.actionText}>Chi Tiết</Text>
+    // Function to determine the priority based on the deadline
+    const getPriority = (deadline) => {
+        const currentDate = new Date();
+        const deadlineDate = new Date(deadline);
+        const timeDiff = deadlineDate.getTime() - currentDate.getTime();
+        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)); // Convert milliseconds to days
+
+        if (daysDiff < 2) {
+            return { label: 'Cao', color: 'red' }; // High priority
+        } else if (daysDiff >= 2 && daysDiff <= 4) {
+            return { label: 'Trung Bình', color: '#FFCC00' }; // Medium priority
+        } else {
+            return { label: 'Thấp', color: 'green' }; // Low priority
+        }
+    };
+
+    const renderItem = ({ item }) => {
+        const currentDate = new Date();
+        const deadlineDate = new Date(item.deadline);
+        const isOverdue = deadlineDate < currentDate; // Check if the deadline is overdue
+        const priority = getPriority(item.deadline); // Get priority object
+
+        return (
+            <TouchableOpacity onPress={() => router.push('/task-details')}>
+                <View style={styles.row}>
+                    <Text style={styles.cell}>{item.task}</Text>
+                    <Text style={styles.cell}>{item.location}</Text>
+                    <Text style={[styles.cell, { color: priority.color }]}>{isOverdue ? 'QUÁ HẠN' : item.status}</Text>
+                    <Text style={[styles.cell, { color: priority.color }]}>{isOverdue ? priority.label : priority.label}</Text>
+                </View>
             </TouchableOpacity>
-        </View>
-    );
+        );
+    };
 
     return (
         <View style={styles.container}>
@@ -65,30 +87,15 @@ const TaskManagement = () => {
                 </TouchableOpacity>
             </View>
             <View style={styles.dateContainer}>
-                <Text style={styles.dateLabel}>Công việc:</Text>
-                <TouchableOpacity onPress={() => { setShowDatePicker(true); setDateType('start'); }}>
-                    <TextInput
-                        style={styles.dateInput}
-                        placeholder="Từ ngày"
-                        editable={false}
-                        value={startDate ? startDate.toLocaleDateString() : ''}
-                    />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => { setShowDatePicker(true); setDateType('end'); }}>
-                    <TextInput
-                        style={styles.dateInput}
-                        placeholder="Đến ngày"
-                        editable={false}
-                        value={endDate ? endDate.toLocaleDateString() : ''}
-                    />
-                </TouchableOpacity>
+                
+               
             </View>
+
             <View style={styles.header}>
                 <Text style={styles.headerText}>Công việc</Text>
                 <Text style={styles.headerText}>Vị trí</Text>
-                <Text style={styles.headerText}>Thời hạn</Text>
                 <Text style={styles.headerText}>Trạng thái</Text>
-                <Text style={styles.headerText}></Text>
+                <Text style={styles.headerText}>Độ ưu tiên</Text>
             </View>
             <FlatList
                 data={data}
@@ -142,11 +149,11 @@ const styles = StyleSheet.create({
     },
     dateContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 15,
         alignItems: 'center',
+        marginBottom: 15,
     },
     dateLabel: {
+        marginRight: 10,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -155,7 +162,6 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         padding: 10,
         flex: 1,
-        marginHorizontal: 5,
         borderRadius: 5,
         backgroundColor: 'white',
         color: 'black',
@@ -171,7 +177,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginLeft: 10,
     },
     row: {
         flexDirection: 'row',
@@ -184,7 +189,6 @@ const styles = StyleSheet.create({
     },
     cell: {
         flex: 2,
-        marginRight: 5,
         textAlign: 'center',
     },
     actionButton: {
