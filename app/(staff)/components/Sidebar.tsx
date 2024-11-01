@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 
 const menuItems = [
   { title: 'Hồ sơ nhân viên', route: '/(staff)/profile', icon: 'person' },
@@ -10,9 +11,28 @@ const menuItems = [
 
 export default function Sidebar() {
   const router = useRouter();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  if (isCollapsed) {
+    return (
+      <TouchableOpacity 
+        style={styles.collapseButton} 
+        onPress={() => setIsCollapsed(false)}
+      >
+        <Ionicons name="menu" size={24} color="#fff" />
+      </TouchableOpacity>
+    );
+  }
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity 
+        style={styles.collapseButton} 
+        onPress={() => setIsCollapsed(true)}
+      >
+        <Ionicons name="close" size={24} color="#fff" />
+      </TouchableOpacity>
+      
       <View style={styles.header}>
         <Image 
           source={require('@/assets/images/logo.png')}
@@ -123,13 +143,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FF5757',
     padding: 15,
-    marginHorizontal: 20,
+    margin: 20,
     borderRadius: 8,
     justifyContent: 'center',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   logoutText: {
     color: '#fff',
     marginLeft: 10,
     fontSize: 16,
+  },
+  collapseButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 999,
+    padding: 8,
+    backgroundColor: 'rgba(48, 42, 22, 0.8)',
+    borderRadius: 8,
   },
 });

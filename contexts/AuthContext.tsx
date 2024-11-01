@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../Services/auth';
 import { jwtDecode } from 'jwt-decode';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define types for our context
 interface User {
@@ -56,24 +57,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (phoneNumber: string, password: string) => {
     try {
-      const loginResponse: LoginResponse = await authService.login({ phoneNumber, password });
+      const loginResponse = await authService.login({ phoneNumber, password });
       
       if (!loginResponse.accessToken || typeof loginResponse.accessToken !== 'string') {
         throw new Error('Invalid token received from server');
       }
       
       const decoded = jwtDecode<DecodedToken>(loginResponse.accessToken);
+      console.log('Decoded token:', decoded);
       setDecodedToken(decoded);
-      
-      setUser(loginResponse.user);
       setIsAuthenticated(true);
       
-      console.log('Login successful!', {
-        user: loginResponse.user,
-        decodedToken: decoded
-      });
+      await AsyncStorage.setItem('accessToken', loginResponse.accessToken);
+      if (loginResponse.user) {
+        setUser(loginResponse.user);
+        await AsyncStorage.setItem('user', JSON.stringify(loginResponse.user));
+      }
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
     }
   };
@@ -84,9 +84,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setDecodedToken(null);
       setIsAuthenticated(false);
+      
+      await AsyncStorage.multiRemove(['token', 'user']);
     } catch (error) {
-      console.error('Logout error:', error);
-      throw error;
+            throw error;
     }
   };
 
@@ -98,6 +99,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isManager = () => getUserRole() === UserRole.Manager;
   const isStaff = () => getUserRole() === UserRole.Staff;
   const isCustomer = () => getUserRole() === UserRole.Customer;
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const accessToken = await AsyncStorage.getItem('accessToken');
+        const userData = await AsyncStorage.getItem('user');
+        
+        if (accessToken && userData) {
+          setUser(JSON.parse(userData));
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+      }
+    };
+
+    loadUser();
+  }, []);
 
   return (
     <AuthContext.Provider value={{ 
