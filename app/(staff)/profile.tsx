@@ -54,7 +54,7 @@ const ProfileScreen: React.FC = () => {
                     <Image source={{ uri: avatar }} style={styles.avatar} />
                 ) : (
                     <View style={styles.avatarPlaceholder}>
-                        <Text style={styles.avatarText}>Ảnh đại diện</Text>
+                        <Text style={styles.avatarText}>Add Photo</Text>
                     </View>
                 )}
             </TouchableOpacity>
@@ -67,7 +67,9 @@ const ProfileScreen: React.FC = () => {
             />
             <Text>Ngày sinh</Text>
             <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-                <Text>{dateOfBirth ? dateOfBirth.toLocaleDateString() : 'Chọn ngày sinh'}</Text>
+                <Text style={styles.dateText}>
+                    {dateOfBirth ? dateOfBirth.toLocaleDateString() : 'Chọn ngày sinh'}
+                </Text>
             </TouchableOpacity>
             {showDatePicker && (
                 <DateTimePicker
@@ -191,6 +193,12 @@ const styles = StyleSheet.create({
       color: '#888', // Placeholder text color
       fontSize: 16,
   },
+  dateText: {
+    marginTop: 12,
+    fontSize: 16, // Set font size
+    color: '#333', // Set text color
+    textAlign: 'left', // Center the text
+},
 });
 
 export default ProfileScreen;
