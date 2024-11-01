@@ -9,12 +9,20 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 // ... keep other imports as needed ...
+
+// Add type definition for your routes
+type RootStackParamList = {
+  'login': undefined;
+  'forgot-password': undefined;
+  'register': undefined;
+};
 
 export default function Login() {
   // ... keep existing state variables ...
 
-  const navigation = useNavigation(); // Replace useNavigate with useNavigation
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>(); // Replace useNavigate with useNavigation
   
   
 
