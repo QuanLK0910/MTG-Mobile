@@ -15,6 +15,8 @@ const TaskManagement = () => {
     const [dateType, setDateType] = useState('start'); // 'start' or 'end'
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
+    const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+    const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
     const handleFilterSelect = (filter) => {
         setSelectedFilter(filter);
@@ -27,6 +29,16 @@ const TaskManagement = () => {
             setEndDate(date);
         }
         setShowDatePicker(false);
+    };
+
+    const handleStartDateConfirm = (date) => {
+        setStartDate(date);
+        setShowStartDatePicker(false);
+    };
+
+    const handleEndDateConfirm = (date) => {
+        setEndDate(date);
+        setShowEndDatePicker(false);
     };
 
     // Function to determine the priority based on the deadline
@@ -63,6 +75,13 @@ const TaskManagement = () => {
         );
     };
 
+    const formatDate = (date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Quản Lý Công Việc</Text>
@@ -87,9 +106,28 @@ const TaskManagement = () => {
                 </TouchableOpacity>
             </View>
             <View style={styles.dateContainer}>
-                
-               
+                <TouchableOpacity style={styles.startDateButton} onPress={() => setShowStartDatePicker(true)}>
+                    <Text style={styles.dateLabel}>Từ ngày: {formatDate(startDate)}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.endDateButton} onPress={() => setShowEndDatePicker(true)}>
+                    <Text style={styles.dateLabel}>Đến ngày: {formatDate(endDate)}</Text>
+                </TouchableOpacity>
             </View>
+
+            <DateTimePickerModal
+                isVisible={showStartDatePicker}
+                mode="date"
+                onConfirm={handleStartDateConfirm}
+                onCancel={() => setShowStartDatePicker(false)}
+                date={startDate}
+            />
+            <DateTimePickerModal
+                isVisible={showEndDatePicker}
+                mode="date"
+                onConfirm={handleEndDateConfirm}
+                onCancel={() => setShowEndDatePicker(false)}
+                date={endDate}
+            />
 
             <View style={styles.header}>
                 <Text style={styles.headerText}>Công việc</Text>
@@ -102,13 +140,6 @@ const TaskManagement = () => {
                 renderItem={renderItem}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContainer}
-            />
-            <DateTimePickerModal
-                isVisible={showDatePicker}
-                mode="date"
-                onConfirm={handleConfirm}
-                onCancel={() => setShowDatePicker(false)}
-                date={dateType === 'start' ? startDate : endDate}
             />
         </View>
     );
@@ -149,7 +180,7 @@ const styles = StyleSheet.create({
     },
     dateContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
+        justifyContent: 'space-between',
         marginBottom: 15,
     },
     dateLabel: {
