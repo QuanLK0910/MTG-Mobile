@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Href } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+
 const menuItems = [
-  { title: 'Dashboard', route: '/(staff)/dashboard' },
-  { title: 'Products', route: '/(staff)/products' },
-  { title: 'Orders', route: '/(staff)/orders' },
-  { title: 'Settings', route: '/(staff)/settings' },
+  { title: 'Hồ sơ nhân viên', route: '/(staff)/profile', icon: 'person' },
+  { title: 'Công việc', route: '/(staff)/tasks', icon: 'list' },
 ];
 
 export default function Sidebar() {
@@ -14,8 +14,19 @@ export default function Sidebar() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Staff Portal</Text>
+        <Image 
+          source={require('@/assets/images/logo.png')}
+          style={styles.headerLogo}
+        />
+        <Text style={styles.welcomeText}>Welcome, 6!</Text>
+        <TouchableOpacity style={styles.staffButton}>
+          <Ionicons name="person" size={20} color="#fff" style={styles.staffIcon} />
+          <Text style={styles.staffButtonText}>Staff</Text>
+        </TouchableOpacity>
       </View>
+      
+      <Text style={styles.sectionTitle}>STAFF DASHBOARD</Text>
+      
       <View style={styles.menu}>
         {menuItems.map((item, index) => (
           <TouchableOpacity
@@ -23,10 +34,21 @@ export default function Sidebar() {
             style={styles.menuItem}
             onPress={() => router.push(item.route as Href<string>)}
           >
+            <Ionicons name={item.icon as any} size={24} color="#fff" />
             <Text style={styles.menuText}>{item.title}</Text>
           </TouchableOpacity>
         ))}
       </View>
+
+      <View style={styles.divider} />
+
+      <TouchableOpacity 
+        style={styles.logoutButton}
+        onPress={() => router.replace('/login')}
+      >
+        <Ionicons name="log-out-outline" size={20} color="#fff" />
+        <Text style={styles.logoutText}>Đăng xuất</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -34,29 +56,80 @@ export default function Sidebar() {
 const styles = StyleSheet.create({
   container: {
     width: 250,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: "rgba(48, 42, 22, 0.8)",
     height: '100%',
+    paddingTop: 20,
   },
   header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
-  headerText: {
+  headerLogo: {
+    width: '100%',
+    height: 80,
+    resizeMode: 'contain',
+  },
+  welcomeText: {
     color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 16,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  staffButton: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    padding: 12,
+    borderRadius: 8,
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  staffIcon: {
+    marginRight: 8,
+  },
+  staffButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 14,
+    padding: 20,
+    paddingBottom: 10,
+    opacity: 0.8,
   },
   menu: {
-    padding: 10,
+    paddingHorizontal: 20,
   },
   menuItem: {
-    padding: 15,
-    borderRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
     marginBottom: 5,
   },
   menuText: {
     color: '#fff',
+    fontSize: 16,
+    marginLeft: 15,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginHorizontal: 20,
+    marginVertical: 10,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF5757',
+    padding: 15,
+    marginHorizontal: 20,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  logoutText: {
+    color: '#fff',
+    marginLeft: 10,
     fontSize: 16,
   },
 });

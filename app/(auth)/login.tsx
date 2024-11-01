@@ -8,25 +8,30 @@ import {
   StyleSheet,
   ActivityIndicator 
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// ... keep other imports as needed ...
-
-// Add type definition for your routes
-type RootStackParamList = {
-  'login': undefined;
-  'forgot-password': undefined;
-  'register': undefined;
-};
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
-  // ... keep existing state variables ...
-
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>(); // Replace useNavigate with useNavigation
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
-  
+  const { login } = useAuth();
+  const router = useRouter();
 
-  // ... keep translateErrorMessage function ...
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      await login(phone, password);
+      router.replace('/dashboard'); // Navigate to staff dashboard after login
+    } catch (error) {
+      setError('Invalid phone number or password');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -42,7 +47,8 @@ export default function Login() {
             <Text style={styles.label}>Số điện thoại</Text>
             <TextInput
               style={styles.input}
-             
+              value={phone}
+              onChangeText={setPhone}
               keyboardType="phone-pad"
               placeholder="Nhập số điện thoại"
             />
@@ -52,29 +58,35 @@ export default function Login() {
             <Text style={styles.label}>Mật khẩu</Text>
             <TextInput
               style={styles.input}
-            
+              value={password}
+              onChangeText={setPassword}
               secureTextEntry
               placeholder="Nhập mật khẩu"
             />
           </View>
 
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
           <TouchableOpacity 
             style={styles.loginButton}
-          
+            onPress={handleLogin}
+            disabled={loading}
           >
-          
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Đăng nhập</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.linkContainer}>
-            <TouchableOpacity onPress={() => navigation.navigate('forgot-password')}>
+            <TouchableOpacity onPress={() => router.push('/forgot-password')}>
               <Text style={styles.link}>Quên mật khẩu?</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('register')}>
+            <TouchableOpacity onPress={() => router.push('/register')}>
               <Text style={styles.link}>Đăng ký</Text>
             </TouchableOpacity>
           </View>
-
-          
         </View>
       </View>
     </View>
@@ -141,5 +153,8 @@ const styles = StyleSheet.create({
     color: 'red',
     marginTop: 10,
     textAlign: 'center',
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 });
