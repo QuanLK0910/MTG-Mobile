@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 const menuItems = [
   { title: 'Hồ sơ nhân viên', route: '/(staff)/profile', icon: 'person' },
-  { title: 'Công việc', route: '/(staff)/tasks', icon: 'list' },
+  { title: 'Công việc', route: '/(staff)/task-list', icon: 'list' },
 ];
 
 export default function Sidebar() {
