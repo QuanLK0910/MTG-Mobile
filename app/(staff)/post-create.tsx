@@ -19,7 +19,7 @@ const CreateBlogScreen = () => {
     title: '',
     location: '',
     content: '',
-    image: null
+    image: null as string | null
   });
 
   const pickImage = async () => {

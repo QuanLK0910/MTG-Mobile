@@ -33,7 +33,7 @@ const BlogListScreen = () => {
     }
   ]);
 
-  const renderBlogItem = ({ item }) => (
+  const renderBlogItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
       style={styles.blogItem}
       onPress={() => router.push({

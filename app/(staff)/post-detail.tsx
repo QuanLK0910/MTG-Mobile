@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Stack } from 'expo-router';
 
-const BlogDetailScreen = ({ route }) => {
+const BlogDetailScreen = ({ route }: { route: any }) => {
   // Sample blog data in Vietnamese
   const blog = {
     id: '1',

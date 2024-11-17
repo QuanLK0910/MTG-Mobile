@@ -78,11 +78,11 @@ const FeedbackListScreen = () => {
       return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
-  const renderStars = (rating) => {
+  const renderStars = (rating: number) => {
     return "⭐".repeat(rating);
   };
 
-  const renderFeedbackItem = ({ item }) => {
+  const renderFeedbackItem = ({ item }: { item: any }) => {
     return (
       <TouchableOpacity
         style={styles.feedbackItem}

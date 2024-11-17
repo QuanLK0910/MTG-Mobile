@@ -53,7 +53,7 @@ const StaffDashboard = () => {
     ]
   };
 
-  const renderStatisticCard = (title, value, color) => (
+  const renderStatisticCard = (title: string, value: number, color: string) => (
     <View style={[styles.statisticCard, { backgroundColor: color }]}>
       <Text style={styles.statisticValue}>{value}</Text>
       <Text style={styles.statisticTitle}>{title}</Text>
@@ -120,7 +120,7 @@ const StaffDashboard = () => {
               <TouchableOpacity 
                 key={blog.id}
                 style={styles.listItem}
-                onPress={() => router.push(`/post-detail/${blog.id}`)}
+                onPress={() => router.push(`/post-detail`)}
               >
                 <View>
                   <Text style={styles.listItemTitle}>{blog.title}</Text>

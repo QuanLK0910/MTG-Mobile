@@ -14,7 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import * as ImagePicker from 'expo-image-picker';
 
-const ChiTietNhiemVu = ({ route, navigation }) => {
+const ChiTietNhiemVu = ({ route, navigation }: { route: any, navigation: any }) => {
   // Dữ liệu mẫu nhiệm vụ (Sample task data)
   const [nhiemVu, setNhiemVu] = useState({
     id: "1",
@@ -80,8 +80,8 @@ const ChiTietNhiemVu = ({ route, navigation }) => {
   };
 
   // Hàm chuyển đổi trạng thái sang tiếng Việt
-  const chuyenDoiTrangThai = (trangThai) => {
-    const trangThaiMap = {
+  const chuyenDoiTrangThai = (trangThai: string) => {
+    const trangThaiMap: Record<string, string> = {
       chuaBatDau: "Chưa Bắt Đầu",
       dangXuLy: "Đang Xử Lý",
       hoantThanh: "Hoàn Thành",
@@ -93,7 +93,7 @@ const ChiTietNhiemVu = ({ route, navigation }) => {
 
 
   // Hàm lấy style badge trạng thái
-  const layStyleBadgeTrangThai = (trangThai) => {
+  const layStyleBadgeTrangThai = (trangThai: string) => {
     switch (trangThai) {
       case "hoantThanh":
         return styles.trangThaiHoanThanh;
@@ -132,7 +132,7 @@ const ChiTietNhiemVu = ({ route, navigation }) => {
           style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContentContainer}
         >
-          {/* Thẻ Nhiệm V�� Chính */}
+          {/* Thẻ Nhiệm V Chính */}
           <View style={styles.taskCard}>
             <View style={styles.taskHeader}>
               <Text style={styles.taskTitle}>{nhiemVu.tieuDe}</Text>

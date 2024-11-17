@@ -10,6 +10,7 @@ const menuItems = [
   { title: 'Công việc', route: '/task-list', icon: 'clipboard' },
   { title: 'Phản hồi', route: '/feedback-list', icon: 'chatbox-ellipses' },
   { title: 'Bài viết', route: '/post-list', icon: 'document-text' },
+  { title: 'Công việc theo tuần', route: '/weekly-task', icon: 'calendar' },
 ];
 
 export default function Sidebar() {
@@ -19,7 +20,7 @@ export default function Sidebar() {
   if (isCollapsed) {
     return (
       <TouchableOpacity 
-        style={[styles.collapseButton, styles.collapseButtonBottom]} 
+        style={[styles.collapseButton, styles.collapseButtonFixed]} 
         onPress={() => setIsCollapsed(false)}
       >
         <Ionicons name="menu" size={24} color="#fff" />
@@ -28,62 +29,77 @@ export default function Sidebar() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.mainContent}>
-        <View style={styles.header}>
-          <Image 
-            source={require('@/assets/images/logo.png')}
-            style={styles.headerLogo}
-          />
-          <Text style={styles.welcomeText}>Welcome, 6!</Text>
-          <TouchableOpacity style={styles.staffButton}>
-            <Ionicons name="person" size={20} color="#fff" style={styles.staffIcon} />
-            <Text style={styles.staffButtonText}>Staff</Text>
+    <View style={styles.overlay}>
+      <View style={styles.container}>
+        <View style={styles.mainContent}>
+          <View style={styles.header}>
+            <Image 
+              source={require('@/assets/images/logo.png')}
+              style={styles.headerLogo}
+            />
+            <Text style={styles.welcomeText}>Welcome, 6!</Text>
+            <TouchableOpacity style={styles.staffButton}>
+              <Ionicons name="person" size={20} color="#fff" style={styles.staffIcon} />
+              <Text style={styles.staffButtonText}>Staff</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <Text style={styles.sectionTitle}>STAFF DASHBOARD</Text>
+          
+          <View style={styles.menu}>
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.menuItem}
+                onPress={() => router.push(item.route as Href<string>)}
+              >
+                <Ionicons name={item.icon as any} size={24} color="#fff" />
+                <Text style={styles.menuText}>{item.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.divider} />
+
+          <TouchableOpacity 
+            style={styles.logoutButton}
+            onPress={() => router.replace('/login')}
+          >
+            <Ionicons name="log-out-outline" size={20} color="#fff" />
+            <Text style={styles.logoutText}>Đăng xuất</Text>
           </TouchableOpacity>
         </View>
-        
-        <Text style={styles.sectionTitle}>STAFF DASHBOARD</Text>
-        
-        <View style={styles.menu}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.menuItem}
-              onPress={() => router.push(item.route as Href<string>)}
-            >
-              <Ionicons name={item.icon as any} size={24} color="#fff" />
-              <Text style={styles.menuText}>{item.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.divider} />
 
         <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={() => router.replace('/login')}
+          style={[styles.collapseButton, styles.collapseButtonFixed]} 
+          onPress={() => setIsCollapsed(true)}
         >
-          <Ionicons name="log-out-outline" size={20} color="#fff" />
-          <Text style={styles.logoutText}>Đăng xuất</Text>
+          <Ionicons name="close" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity 
-        style={[styles.collapseButton, styles.collapseButtonSidebar]} 
-        onPress={() => setIsCollapsed(true)}
-      >
-        <Ionicons name="close" size={24} color="#fff" />
-      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Optional: adds a semi-transparent overlay
+  },
   container: {
+    position: 'absolute',
     width: 250,
     backgroundColor: "rgba(48, 42, 22, 0.8)",
     height: '100%',
-    paddingTop: 20,
+    paddingTop: 80,
+    left: 0,
+    top: 0,
+    zIndex: 1001,
   },
   mainContent: {
     flex: 1,
@@ -168,12 +184,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(48, 42, 22, 0.8)',
     borderRadius: 8,
   },
-  collapseButtonBottom: {
+  collapseButtonFixed: {
+    position: 'absolute',
     bottom: 20,
     left: 20,
-  },
-  collapseButtonSidebar: {
-    bottom: 20,
-    left: 20,
+    zIndex: 999,
   },
 });
