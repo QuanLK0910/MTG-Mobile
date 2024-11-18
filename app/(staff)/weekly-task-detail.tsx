@@ -4,7 +4,30 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format } from 'date-fns';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { getScheduleDetailById } from '../../Services/scheduledetail';
+import { uploadTaskImages } from '../../Services/task';
 
+
+interface ScheduleDetail {
+  attendanceStaff: {
+    accountId: number;
+    staffName: string;
+    startTime: string;
+    endTime: string;
+    date: string;
+    status: number;
+    attendanceId: number;
+    // ... other fields
+  };
+  scheduleDetail: {
+    scheduleDetailId: number;
+    taskId: number;
+    description: string;
+    serviceName: string;
+    status: number;
+    // ... other fields
+  };
+}
 // You might want to create this type in a separate types file
 type TaskDetail = {
   taskId: number;
@@ -32,6 +55,8 @@ export default function WeeklyTaskDetail() {
   const taskId = params.id;
   const [task, setTask] = useState<TaskDetail | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [scheduleDetail, setScheduleDetail] = useState<ScheduleDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setTask({
@@ -54,6 +79,24 @@ export default function WeeklyTaskDetail() {
       graveLocation: "K1-R2-102"
     });
   }, [taskId]);
+
+  useEffect(() => {
+    const fetchScheduleDetail = async () => {
+      try {
+        const accountId = parseInt(params.accountId as string);
+        const scheduleDetailId = parseInt(params.scheduleDetailId as string);
+        
+        const detail = await getScheduleDetailById(accountId, scheduleDetailId);
+        setScheduleDetail(detail);
+      } catch (error) {
+        console.error('Error fetching schedule detail:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScheduleDetail();
+  }, [params.accountId, params.scheduleDetailId]);
 
   const requestPermissions = async () => {
     const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
@@ -135,6 +178,9 @@ export default function WeeklyTaskDetail() {
           text: 'Xác nhận',
           onPress: async () => {
             try {
+              // First upload the image
+              await uploadTaskImages(task!.taskId, [selectedImage]);
+              
               // TODO: Implement API call to complete task
               Alert.alert('Thành công', 'Công việc đã được hoàn thành!', [
                 {
@@ -143,13 +189,21 @@ export default function WeeklyTaskDetail() {
                 },
               ]);
             } catch (error) {
-              Alert.alert('Lỗi', 'Không thể hoàn thành công việc. Vui lòng thử lại sau.');
+              console.error('Error completing task:', error);
+              Alert.alert(
+                'Lỗi', 
+                'Không thể hoàn thành công việc. Vui lòng thử lại sau.'
+              );
             }
           },
         },
       ]
     );
   };
+
+  if (loading) {
+    return <View><Text>Loading...</Text></View>;
+  }
 
   if (!task) return <Text>Loading...</Text>;
 

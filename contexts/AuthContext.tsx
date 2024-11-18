@@ -20,7 +20,7 @@ interface LoginResponse {
 interface DecodedToken {
   exp: number;
   iat: number;
-  userId: number;
+  accountId: number;
   'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': string;
   // ... other claims
 }
@@ -44,6 +44,7 @@ interface AuthContextType {
   isManager: () => boolean;
   isCustomer: () => boolean;
   getUserRole: () => string | null;
+  getUserId: () => number | null;
 }
 
 // Create the context
@@ -95,6 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return decodedToken?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || null;
   };
 
+  const getUserId = () => {
+    return decodedToken?.accountId || null;
+  };
+
   const isAdmin = () => getUserRole() === UserRole.Admin;
   const isManager = () => getUserRole() === UserRole.Manager;
   const isStaff = () => getUserRole() === UserRole.Staff;
@@ -128,7 +133,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAdmin,
       isManager,
       isCustomer,
-      getUserRole
+      getUserRole,
+      getUserId
     }}>
       {children}
     </AuthContext.Provider>

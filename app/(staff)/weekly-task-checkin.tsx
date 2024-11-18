@@ -1,14 +1,76 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import { getScheduleDetailById } from '../../Services/scheduledetail';
+import { checkAttendanceForStaff } from '../../Services/attendance';
+
+interface ScheduleDetail {
+  attendanceStaff: {
+    accountId: number;
+    staffName: string;
+    startTime: string;
+    endTime: string;
+    date: string;
+    status: number;
+    attendanceId: number;
+  };
+  scheduleDetail: {
+    scheduleDetailId: number;
+    taskId: number;
+    description: string;
+    serviceName: string;
+    status: number;
+  };
+}
 
 export default function WeeklyTaskDetail() {
-  const { id } = useLocalSearchParams();
+  const { accountId, scheduleDetailId } = useLocalSearchParams();
   const router = useRouter();
   const [image, setImage] = useState<string | null>(null);
+  const [scheduleDetail, setScheduleDetail] = useState<ScheduleDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchScheduleDetail = async () => {
+      try {
+        console.log('Fetching with params:', { accountId, scheduleDetailId });
+        
+        const detail = await getScheduleDetailById(
+          parseInt(accountId as string), 
+          parseInt(scheduleDetailId as string)
+        );
+        
+        console.log('Fetched detail:', detail);
+        
+        if (detail) {
+          if (detail.attendanceStaff.status === 1) {
+            router.replace({
+              pathname: '/weekly-task-detail',
+              params: {
+                accountId: accountId.toString(),
+                scheduleDetailId: scheduleDetailId.toString()
+              }
+            });
+            return;
+          }
+          setScheduleDetail(detail);
+        } else {
+          Alert.alert('Lỗi', 'Không thể tải thông tin công việc');
+          router.back();
+        }
+      } catch (error) {
+        console.error('Failed to fetch schedule detail:', error);
+        Alert.alert('Lỗi', 'Đã có lỗi xảy ra khi tải thông tin');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScheduleDetail();
+  }, [accountId, scheduleDetailId]);
 
   const pickImage = async () => {
     // Request permissions
@@ -51,51 +113,82 @@ export default function WeeklyTaskDetail() {
     }
   };
 
-  const handleCheckIn = () => {
-    if (!image) {
-      Alert.alert('Lỗi', 'Vui lòng chụp ảnh xác nhận trước khi check-in');
-      return;
-    }
+  const handleCheckIn = async () => {
+    try {
+      if (!scheduleDetail?.attendanceStaff.attendanceId || !image) {
+        Alert.alert('Lỗi', 'Vui lòng chụp ảnh trước khi check-in');
+        return;
+      }
 
-    Alert.alert(
-      'Xác nhận Check-in',
-      'Chi tiết công việc:\n\n' +
-      '- Tên công việc: Thay hoa cúc\n' +
-      '- Thời gian: 16:00 17/11/2024\n' +
-      '- Trạng thái: Đã hoàn thành\n\n' +
-      'Bạn có chắc chắn muốn check-in không?',
-      [
-        {
-          text: 'Hủy',
-          style: 'cancel'
-        },
-        {
-          text: 'Xác nhận',
-          onPress: () => {
-            // Here you would typically make an API call to submit the check-in
-            Alert.alert('Thành công', 'Check-in thành công!', [
-              {
-                text: 'OK',
-                onPress: () => router.push(`/weekly-task-detail?id=${id}`)
-              }
-            ]);
+      await checkAttendanceForStaff(
+        parseInt(accountId as string),  // staffId
+        scheduleDetail.attendanceStaff.attendanceId,  // attendanceId
+        image  // imagePath1
+      );
+      
+      // Show success message
+      Alert.alert(
+        'Thành công',
+        'Check-in thành công!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Navigate back to weekly-task-detail with params
+              router.replace({
+                pathname: '/weekly-task-detail',
+                params: {
+                  accountId: accountId.toString(),
+                  scheduleDetailId: scheduleDetailId.toString()
+                }
+              });
+            }
           }
-        }
-      ]
-    );
+        ]
+      );
+    } catch (error) {
+      console.error('Check-in failed:', error);
+      // Show error message
+      Alert.alert(
+        'Lỗi',
+        'Không thể check-in. Vui lòng thử lại sau.'
+      );
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Yêu Cầu Check-in</Text>
       
       <View style={styles.taskCard}>
-        <Text style={styles.taskNumber}>#1</Text>
-        <Text style={styles.taskName}>Thay hoa cúc</Text>
-        <Text style={styles.taskTime}>lúc 16:00 17 tháng 11, 2024</Text>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>Đang thực hiện</Text>
+        <Text style={styles.taskNumber}>#{scheduleDetail?.scheduleDetail.scheduleDetailId}</Text>
+        <Text style={styles.taskName}>{scheduleDetail?.scheduleDetail.serviceName || 'N/A'}</Text>
+        <Text style={styles.taskTime}>
+          {`${scheduleDetail?.attendanceStaff.startTime || 'N/A'} - ${scheduleDetail?.attendanceStaff.endTime || 'N/A'}`}
+        </Text>
+        <Text style={styles.taskDate}>{scheduleDetail?.attendanceStaff.date || 'N/A'}</Text>
+        <View style={[styles.statusBadge, {
+          backgroundColor: scheduleDetail?.attendanceStaff.status === 0 ? '#FFE4B8' : '#D1F2D9'
+        }]}>
+          <Text style={[styles.statusText, {
+            color: scheduleDetail?.attendanceStaff.status === 0 ? '#FF9800' : '#28A745'
+          }]}>
+            {scheduleDetail?.attendanceStaff.status === 0 ? 'Chưa check-in' : 'Đã check-in'}
+          </Text>
         </View>
+      </View>
+
+      <View style={styles.descriptionContainer}>
+        <Text style={styles.descriptionTitle}>Mô tả công việc:</Text>
+        <Text style={styles.descriptionText}>{scheduleDetail?.scheduleDetail.description || 'N/A'}</Text>
       </View>
 
       <View style={styles.instructionsContainer}>
@@ -264,4 +357,28 @@ const styles = StyleSheet.create({
   checkInButtonDisabled: {
     backgroundColor: '#ccc',
   },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  descriptionContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  descriptionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  descriptionText: {
+    color: '#444',
+    lineHeight: 20,
+  },
+  taskDate: {
+    color: '#666',
+    marginTop: 4,
+  }
 });
