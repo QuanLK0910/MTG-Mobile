@@ -37,7 +37,7 @@ export const getTasksByAccount = async (
       throw new Error('No token found');
     }
 
-    const response = await api.get('/Task/tasks/account/' + accountId, {
+    const response = await api.get('/Task/tasksNotScheduling/account/' + accountId, {
       params: {
         pageIndex,
         pageSize,
@@ -67,9 +67,7 @@ export const createTask = async (taskData: CreateTaskRequest): Promise<any> => {
     }
 
     // Debug logs
-    console.log('=== Debug Create Task ===');
-    console.log('1. Task Data:', JSON.stringify(taskData, null, 2));
-    console.log('2. Token:', token);
+  
     
     // Make sure we're using the correct endpoint
     const response = await api.post('/Task/tasks', [taskData], {  // Note: Wrapping taskData in an array
@@ -100,20 +98,40 @@ export const createTask = async (taskData: CreateTaskRequest): Promise<any> => {
   }
 };
 
-export const uploadTaskImages = async (taskId: number, imageUrls: string[]): Promise<any> => {
+export const uploadImageToFirebase = async (uri: string, taskId: number): Promise<string> => {
   try {
+    // Create a unique file path in Firebase Storage
+    const filename = `tasks/${taskId}/${Date.now()}.jpg`;
+    const reference = storage().ref(filename);
+
+    // Upload the file
+    await reference.putFile(uri);
+
+    // Get the download URL
+    const downloadURL = await reference.getDownloadURL();
+    console.log('Image uploaded to Firebase:', downloadURL);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('Firebase Upload Error:', error);
+    throw error;
+  }
+};
+
+export const uploadTaskImages = async (taskId: number, imageUris: string[]): Promise<any> => {
+  try {
+    // First upload all images to Firebase
+    const uploadPromises = imageUris.map(uri => uploadImageToFirebase(uri, taskId));
+    const firebaseUrls = await Promise.all(uploadPromises);
+
+    // Then send the Firebase URLs to your API
     const token = await AsyncStorage.getItem('accessToken');
     if (!token) {
       throw new Error('No token found');
     }
 
-    // Debug logs
-    console.log('=== Debug Upload Task Images ===');
-    console.log('1. Task ID:', taskId);
-    console.log('2. Image URLs:', imageUrls);
-
     const requestBody: UploadTaskImagesRequest = {
-      urlImages: imageUrls
+      urlImages: firebaseUrls
     };
 
     const response = await api.put(`/Task/tasks/${taskId}/images`, requestBody, {
@@ -123,22 +141,10 @@ export const uploadTaskImages = async (taskId: number, imageUrls: string[]): Pro
       }
     });
 
-    console.log('3. API Response:', JSON.stringify(response.data, null, 2));
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error('Upload Task Images Error:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers,
-          data: error.config?.data
-        }
-      });
+      console.error('Upload Task Images Error:', error.response?.data);
     }
     throw error;
   }

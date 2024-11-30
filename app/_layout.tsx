@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
+import React from 'react';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -30,7 +30,13 @@ export default function RootLayout() {
   return (
     <AuthProvider>  
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen 
+            name="index" 
+            options={{ 
+              headerShown: false,
+            }} 
+          />
           <Stack.Screen 
             name="(auth)" 
             options={{ 
@@ -44,12 +50,12 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen 
-            name="index" 
+            name="screens/customer" 
             options={{ 
               headerShown: false,
             }}
           />
-          <Stack.Screen name="+not-found" />
+          <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
         </Stack>
       </ThemeProvider>
     </AuthProvider>

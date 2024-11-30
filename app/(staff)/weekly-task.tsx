@@ -138,14 +138,13 @@ export default function WeeklyTaskPage() {
         const details: Record<string, ScheduleDetail> = {};
         
         // Debug logs
-        console.log("Selected Date:", selectedDate);
-        console.log("Selected Date ISO:", selectedDate.toISOString());
+       
 
         // Format date consistently
         const localDate = new Date(selectedDate);
         const dateString = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
         
-        console.log("Fetching schedules for date:", dateString);
+       
 
         const scheduleDetails = await getSchedulesForStaffFilterDate(
           accountId,
@@ -153,7 +152,7 @@ export default function WeeklyTaskPage() {
           dateString  // toDate
         );
 
-        console.log("Received schedule details:", scheduleDetails);
+        
 
         // Process all schedule details at once
         scheduleDetails.forEach((detail) => {
@@ -281,7 +280,7 @@ export default function WeeklyTaskPage() {
         accountId,
         formattedDate
       );
-      console.log("API Response:", response);
+      
 
       if (response && response.tasks) {
         setTasks(response.tasks);
@@ -372,9 +371,11 @@ export default function WeeklyTaskPage() {
 
             } catch (error) {
               console.error("Error creating schedule detail:", error);
+                const errorMessage = error.response.data.messaege || 
+                                 "Không thể đăng ký ca làm việc. Vui lòng thử lại sau.";
               Alert.alert(
                 "Lỗi",
-                "Không thể đăng ký ca làm việc. Vui lòng thử lại sau.",
+                errorMessage,
                 [{ text: "Đóng" }]
               );
             }

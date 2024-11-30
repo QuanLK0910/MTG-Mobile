@@ -148,11 +148,19 @@ export default function WeeklyTaskDetail() {
       );
     } catch (error) {
       console.error('Check-in failed:', error);
-      // Show error message
-      Alert.alert(
-        'Lỗi',
-        'Không thể check-in. Vui lòng thử lại sau.'
-      );
+      let errorMessage = "Không thể check-in. Vui lòng thử lại sau.";
+      
+      try {
+        // @ts-ignore
+        if (error && typeof error === 'object' && error.data && typeof error.data === 'string') {
+          const parsedError = JSON.parse(error.data);
+          errorMessage = parsedError.message || errorMessage;
+        }
+      } catch (parseError) {
+        console.error('Error parsing error message:', parseError);
+      }
+      
+      Alert.alert('Lỗi', errorMessage);
     }
   };
 

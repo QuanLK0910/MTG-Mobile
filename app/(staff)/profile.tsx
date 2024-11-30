@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, SafeAreaView, TextInput, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { getProfile, updateProfile } from '../../Services/account';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface ProfileData {
   accountId: number;
+  roleName: string;
   fullName: string;
   createAt: string;
   status: boolean;
@@ -22,29 +27,39 @@ const StaffProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const router = useRouter();
+  const { getUserId } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<ProfileData | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateInputText, setDateInputText] = useState('');
 
   useEffect(() => {
-    // Fetch profile data here
-    // For now using dummy data
-    setTimeout(() => {
-      setProfileData({
-        accountId: 1,
-        fullName: "Nguyễn Văn A",
-        createAt: new Date().toISOString(),
-        status: true,
-        areaId: 1,
-        emailAddress: "nguyenvana@example.com",
-        phoneNumber: "0123456789",
-        address: "123 Đường Nguyễn Văn A, Quận B, TP.HCM",
-        avatarPath: "https://via.placeholder.com/140",
-        dateOfBirth: new Date().toISOString(),
-        roleId: 3
-      });
-      setIsLoading(false);
-    }, 1000);
+    fetchProfileData();
   }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const accountId = getUserId();
+      if (!accountId) {
+        throw new Error('Không tìm thấy ID tài khoản');
+      }
+
+      const data = await getProfile(accountId);
+      if (!data) {
+        throw new Error('Không có dữ liệu trả về từ máy chủ');
+      }
+      
+      setProfileData(data as ProfileData);
+    } catch (err: any) {
+      setError(err.message || 'Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.');
+      console.error('Profile fetch error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // When profileData is loaded, initialize editedData
   useEffect(() => {
@@ -55,16 +70,94 @@ const StaffProfile = () => {
 
   const handleSave = async () => {
     try {
-      // Add your API call here to save the changes
-      // await updateProfile(editedData);
+      if (!editedData) {
+        throw new Error('Không có dữ liệu để cập nhật');
+      }
       
+      setIsLoading(true);
+      
+      // Prepare the update request data
+      const updateData = {
+        fullName: editedData.fullName,
+        dateOfBirth: editedData.dateOfBirth || '',
+        address: editedData.address || '',
+        avatarPath: editedData.avatarPath,
+        emailAddress: editedData.emailAddress || '',
+        areaId: editedData.areaId
+      };
+
+      await updateProfile(editedData.accountId, updateData);
+      
+      // Update local state with the edited data
       setProfileData(editedData);
       setIsEditing(false);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      // Add error handling here
+      Alert.alert('Thành công', 'Đã cập nhật thông tin thành công');
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      Alert.alert(
+        'Lỗi',
+        error.message || 'Không thể cập nhật thông tin. Vui lòng thử lại sau.',
+        [{ text: 'Đồng ý' }]
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate && event.type !== 'dismissed') {
+      setEditedData(prev => ({ ...prev!, dateOfBirth: selectedDate.toISOString() }));
+    }
+  };
+
+  // Add this function to validate and parse date
+  const parseDateString = (dateStr: string) => {
+    // Support formats: DD/MM/YYYY, D/M/YYYY
+    const parts = dateStr.split('/');
+    if (parts.length !== 3) return null;
+
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // months are 0-based
+    const year = parseInt(parts[2], 10);
+
+    const date = new Date(year, month, day);
+
+    // Validate the date is real and not in the future
+    if (isNaN(date.getTime()) || date > new Date()) return null;
+    if (date.getDate() !== day || date.getMonth() !== month || date.getFullYear() !== year) return null;
+
+    return date;
+  };
+
+  // Add this function to handle manual date input
+  const handleDateInput = (text: string) => {
+    setDateInputText(text);
+    
+    // Auto-add slashes
+    if (text.length === 2 || text.length === 5) {
+      if (!text.endsWith('/')) {
+        setDateInputText(text + '/');
+      }
+    }
+
+    // Try to parse the date when input is complete
+    if (text.length >= 8) {
+      const parsedDate = parseDateString(text);
+      if (parsedDate) {
+        setEditedData(prev => ({ ...prev!, dateOfBirth: parsedDate.toISOString() }));
+      }
+    }
+  };
+
+  // Update useEffect to initialize dateInputText when editing starts
+  useEffect(() => {
+    if (editedData?.dateOfBirth) {
+      setDateInputText(new Date(editedData.dateOfBirth).toLocaleDateString('vi-VN'));
+    } else {
+      setDateInputText('');
+    }
+  }, [isEditing]);
 
   if (isLoading) {
     return (
@@ -86,11 +179,7 @@ const StaffProfile = () => {
           <Text style={styles.errorText}>Có lỗi xảy ra khi tải dữ liệu</Text>
           <TouchableOpacity 
             style={styles.retryButton}
-            onPress={() => {
-              setError(null);
-              setIsLoading(true);
-              // Add your reload logic here
-            }}
+            onPress={fetchProfileData}
           >
             <Feather name="refresh-cw" size={20} color="#FFFFFF" />
             <Text style={styles.retryButtonText}>Thử lại</Text>
@@ -109,10 +198,7 @@ const StaffProfile = () => {
           <Text style={styles.errorText}>Không tìm thấy thông tin người dùng</Text>
           <TouchableOpacity 
             style={styles.retryButton}
-            onPress={() => {
-              setIsLoading(true);
-              // Add your reload logic here
-            }}
+            onPress={fetchProfileData}
           >
             <Feather name="refresh-cw" size={20} color="#FFFFFF" />
             <Text style={styles.retryButtonText}>Thử lại</Text>
@@ -181,18 +267,36 @@ const StaffProfile = () => {
           <View style={styles.DetailRow}>
             <Text style={styles.Label}>Ngày Sinh:</Text>
             {isEditing ? (
-              <TextInput
-                style={styles.input}
-                value={editedData?.dateOfBirth ? new Date(editedData.dateOfBirth).toLocaleDateString('vi-VN') : ''}
-                onChangeText={(text) => setEditedData(prev => ({ ...prev!, dateOfBirth: text }))}
-                placeholder="DD/MM/YYYY"
-              />
+              <View style={styles.dateInputContainer}>
+                <TextInput
+                  style={styles.dateInput}
+                  value={dateInputText}
+                  onChangeText={handleDateInput}
+                  placeholder="DD/MM/YYYY"
+                  keyboardType="numeric"
+                  maxLength={10}
+                />
+                <TouchableOpacity 
+                  style={styles.calendarButton}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Feather name="calendar" size={20} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
             ) : (
               <Text style={styles.Value}>
                 {profileData?.dateOfBirth 
                   ? new Date(profileData.dateOfBirth).toLocaleDateString('vi-VN')
                   : 'Chưa cập nhật'}
               </Text>
+            )}
+            {showDatePicker && (
+              <DateTimePicker
+                value={editedData?.dateOfBirth ? new Date(editedData.dateOfBirth) : new Date()}
+                mode="date"
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
             )}
           </View>
 
@@ -484,6 +588,26 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     borderRadius: 4,
     minHeight: 30,
+  },
+  dateInputContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 4,
+    backgroundColor: '#FFFFFF',
+  },
+  dateInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#111827',
+    padding: 8,
+  },
+  calendarButton: {
+    padding: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E5E7EB',
   },
 });
 
