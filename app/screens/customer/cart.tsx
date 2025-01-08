@@ -3,77 +3,82 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import { useRouter } from "expo-router";
 
-// Mock data - replace with your actual cart data
+// Updated mock data structure
 const cartItems = [
   {
     id: '1',
-    name: 'Product 1',
-    price: 29.99,
-    quantity: 2,
+    serviceName: 'Thay hoa lan',
+    description: 'Dich vu thay hoa lan cho các mộ liệt sĩ',
+    price: 283500,
     image: 'https://via.placeholder.com/100',
+    doctor: 'Nguyễn Hữu An'
   },
   {
     id: '2',
-    name: 'Product 2',
-    price: 19.99,
-    quantity: 1,
+    serviceName: 'Thay cây xanh tươi',
+    description: 'Dich vu thay cây xanh tươi cho các mộ liệt sĩ',
+    price: 189000,
     image: 'https://via.placeholder.com/100',
+    doctor: 'Nguyễn Hữu An'
   },
 ];
 
 export default function Cart() {
   const router = useRouter();
 
-  const calculateTotal = () => {
-    return cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  };
-
   const renderItem = ({ item }) => (
     <View style={styles.cartItem}>
-      <Image source={{ uri: item.image }} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>${item.price}</Text>
-        <View style={styles.quantityContainer}>
-          <TouchableOpacity style={styles.quantityButton}>
-            <Text>-</Text>
-          </TouchableOpacity>
-          <Text style={styles.quantity}>{item.quantity}</Text>
-          <TouchableOpacity style={styles.quantityButton}>
-            <Text>+</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.checkboxContainer}>
+        <View style={styles.checkbox} />
       </View>
+      <Image source={{ uri: item.image }} style={styles.serviceImage} />
+      <View style={styles.serviceInfo}>
+        <Text style={styles.serviceName}>{item.serviceName}</Text>
+        <Text style={styles.serviceDescription}>{item.description}</Text>
+        <Text style={styles.servicePrice}>{item.price.toLocaleString()}đ</Text>
+        <Text style={styles.doctorName}>{item.doctor}</Text>
+      </View>
+      <TouchableOpacity style={styles.deleteButton}>
+        <Text style={styles.deleteIcon}>🗑️</Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.closeButton}
-          onPress={() => router.push("/")}
-        >
-          <Text style={styles.closeButtonText}>✕</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Giỏ hàng</Text>
+        <Text style={styles.title}>Giỏ hàng của bạn</Text>
+        <Text style={styles.subtitle}>{cartItems.length} sản phẩm trong giỏ hàng</Text>
       </View>
+
+      <View style={styles.tableHeader}>
+        <View style={styles.checkboxContainer}>
+          <View style={styles.checkbox} />
+        </View>
+        <Text style={[styles.columnHeader, { flex: 0.8 }]}>Hình ảnh</Text>
+        <Text style={[styles.columnHeader, { flex: 2 }]}>Thông tin dịch vụ</Text>
+        <Text style={[styles.columnHeader, { width: 40 }]}>Xóa</Text>
+      </View>
+
       <FlatList
         data={cartItems}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         style={styles.list}
       />
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Tổng tiền:</Text>
-        <Text style={styles.totalAmount}>${calculateTotal().toFixed(2)}</Text>
+
+      <View style={styles.footer}>
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalLabel}>Tổng cộng:</Text>
+          <Text style={styles.totalAmount}>0 đ</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.checkoutButton}
+          onPress={() => router.push("/screens/customer/checkout")}
+        >
+          <Text style={styles.checkoutButtonText}>Thanh Toán</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity 
-        style={styles.checkoutButton}
-        onPress={() => router.push("/screens/customer/checkout")}
-      >
-        <Text style={styles.checkoutButtonText}>Tiến hành thanh toán</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -81,84 +86,114 @@ export default function Cart() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fa',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 16,
-  },
-  closeButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  closeButtonText: {
-    fontSize: 20,
-    fontWeight: '500',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#333',
   },
-  list: {
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  columnHeader: {
     flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    textTransform: 'uppercase',
+  },
+  checkboxContainer: {
+    width: 24,
+    marginRight: 12,
+    justifyContent: 'center',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#ddd',
+    borderRadius: 4,
   },
   cartItem: {
     flexDirection: 'row',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    alignItems: 'center',
   },
-  productImage: {
-    width: 80,
-    height: 80,
+  serviceImage: {
+    width: 60,
+    height: 60,
     borderRadius: 8,
+    marginRight: 12,
   },
-  productInfo: {
-    marginLeft: 16,
+  serviceInfo: {
     flex: 1,
   },
-  productName: {
+  serviceName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#333',
   },
-  productPrice: {
-    fontSize: 16,
+  serviceDescription: {
+    fontSize: 14,
     color: '#666',
     marginTop: 4,
   },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  quantityButton: {
-    backgroundColor: '#eee',
-    padding: 8,
-    borderRadius: 4,
-  },
-  quantity: {
-    marginHorizontal: 16,
+  servicePrice: {
     fontSize: 16,
+    fontWeight: '600',
+    color: '#ff4444',
+    marginTop: 4,
   },
-  totalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  doctorName: {
+    fontSize: 14,
+    color: '#2196F3',
+    marginTop: 4,
+  },
+  deleteButton: {
+    padding: 8,
+  },
+  deleteIcon: {
+    fontSize: 20,
+  },
+  footer: {
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#eee',
+    backgroundColor: '#fff',
   },
-  totalText: {
-    fontSize: 18,
-    fontWeight: '500',
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 8,
   },
   totalAmount: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
   },
   checkoutButton: {
-    backgroundColor: '#4a148c',
-    margin: 16,
+    backgroundColor: '#4CAF50',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -166,6 +201,6 @@ const styles = StyleSheet.create({
   checkoutButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

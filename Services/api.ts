@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 export const api = axios.create({
-  baseURL: 'http://10.0.2.2:5244/api', // Update this with your actual API base URL
+  baseURL: 'https://milkstyle.id.vn', // Update this with your actual API base URL
   headers: {
     'Content-Type': 'application/json',
     'Accept': '*/*'

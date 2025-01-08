@@ -5,7 +5,7 @@ import Header from "../../../components/header";
 export default function TabsLayout() {
   return (
     <>
-
+      <Header />
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -21,7 +21,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Home',
+            title: 'Trang chủ',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="home" size={size} color={color} />
             ),
@@ -30,16 +30,25 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="notification/index"
           options={{
-            title: 'Notification',
+            title: 'Thông báo',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="notifications" size={size} color={color} />
             ),
           }}
         />
         <Tabs.Screen
+          name="findgrave/index"
+          options={{
+            title: 'Tìm mộ',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="search" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="service/index"
           options={{
-            title: 'Service',
+            title: 'Dịch vụ',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="grid" size={size} color={color} />
             ),
@@ -48,7 +57,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="account/index"
           options={{
-            title: 'Account',
+            title: 'Tài khoản',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="person" size={size} color={color} />
             ),

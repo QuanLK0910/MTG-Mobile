@@ -3,8 +3,8 @@ import { api } from './api';
 
 // Add these constants at the top of the file
 const AUTH_ENDPOINTS = {
-  LOGIN: '/Auth/auth',
-  LOGOUT: '/Auth/logout'
+  LOGIN: '/api/Auth/auth',
+  LOGOUT: '/api/Auth/logout'
 } as const;
 
 export const authService = {

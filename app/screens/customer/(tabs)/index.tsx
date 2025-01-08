@@ -1,28 +1,29 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  Image, 
-  ScrollView, 
-  Dimensions, 
-  TouchableOpacity, 
-  SafeAreaView, 
-  StyleSheet 
-} from 'react-native';
-import memorial1 from '../../../../assets/images/memorial1.jpg';
-import memorial2 from '../../../../assets/images/memorial2.jpg';
-import memorial3 from '../../../../assets/images/memorial3.jpg';
-const { width: screenWidth } = Dimensions.get('window');
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+  SafeAreaView,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
+import memorial1 from "../../../../assets/images/memorial1.jpg";
+import memorial2 from "../../../../assets/images/memorial2.jpg";
+import memorial3 from "../../../../assets/images/memorial3.jpg";
+import { getTrendingServices } from "../../../../Services/service";
+import type { Service } from "../../../../Services/service";
+const { width: screenWidth } = Dimensions.get("window");
 
 const HomeScreen = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollViewRef = React.useRef<ScrollView>(null);
+  const [trendingServices, setTrendingServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const sliderImages = [
-    memorial1,
-    memorial2,
-    memorial3
-  ];
+  const sliderImages = [memorial1, memorial2, memorial3];
 
   // Auto-slide effect
   React.useEffect(() => {
@@ -31,30 +32,28 @@ const HomeScreen = () => {
       setCurrentSlide(nextSlide);
       scrollViewRef.current?.scrollTo({
         x: nextSlide * screenWidth,
-        animated: true
+        animated: true,
       });
     }, 3000);
 
     return () => clearInterval(slideInterval);
   }, [currentSlide]);
 
-  const services = [
-    {
-      title: 'Chăm Sóc Phần Mộ',
-      description: 'Vệ sinh, chăm sóc cảnh quan và bảo tồn các khu tưởng niệm.',
-      icon: '🌿'
-    },
-    {
-      title: 'Tưởng Niệm Số',
-      description: 'Nền tảng trực tuyến để tưởng nhớ và tôn vinh câu chuyện và sự hy sinh của các liệt sĩ.',
-      icon: '💻'
-    },
-    {
-      title: 'Hỗ Trợ Gia Đình',
-      description: 'Dịch vụ tư vấn và hỗ trợ dành cho gia đình liệt sĩ.',
-      icon: '❤️'
-    }
-  ];
+  // Fetch trending services
+  React.useEffect(() => {
+    const fetchServices = async () => {
+      setIsLoading(true);
+      try {
+        const services = await getTrendingServices();
+        setTrendingServices(services);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchServices();
+  }, []);
 
   // Fix the width issue for slider images
   const renderSliderImage = (image: any, index: number) => (
@@ -92,7 +91,12 @@ const HomeScreen = () => {
             {sliderImages.map((_, index) => (
               <View
                 key={index}
-                style={[styles.paginationDot, currentSlide === index ? styles.activeDot : styles.inactiveDot]}
+                style={[
+                  styles.paginationDot,
+                  currentSlide === index
+                    ? styles.activeDot
+                    : styles.inactiveDot,
+                ]}
               />
             ))}
           </View>
@@ -100,49 +104,95 @@ const HomeScreen = () => {
 
         {/* Introduction Section */}
         <View style={styles.introSection}>
-          <View style={styles.introHeader}>
-            <Text style={styles.title}>
-              Tưởng Nhớ Các Anh Hùng Liệt Sĩ
-            </Text>
-            <Text style={styles.subtitle}>
-              Gìn Giữ Di Sản • Tôn Vinh Hy Sinh • Xây Dựng Tương Lai
-            </Text>
-          </View>
-          <Text style={styles.description}>
-            Chúng tôi đứng vững như những người gìn giữ ký ức thiêng liêng của dân tộc, 
-            tận tâm bảo tồn di sản vĩnh cửu của các anh hùng liệt sĩ. Thông qua sự chăm sóc 
-            tỉ mỉ và cam kết không ngừng nghỉ, chúng tôi đảm bảo rằng sự hy sinh của họ 
-            sẽ tiếp tục truyền cảm hứng cho các thế hệ mai sau.
+          <Text style={styles.introTitle}>
+            Giới thiệu về nghĩa trang liệt sỹ TP.HCM
           </Text>
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={() => {/* Add navigation or action here */}}
-          >
-            <Text style={styles.buttonText}>
-              Tìm Hiểu Thêm Về Sứ Mệnh
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.introContentContainer}>
+            <View style={styles.introContent}>
+              <Text style={styles.introLetter}>N</Text>
+              <Text style={styles.introText}>
+                ghĩa trang liệt sỹ TP.HCM là một địa điểm linh thiêng, nơi an nghỉ
+                vĩnh hằng của những anh hùng đã hiến dâng cuộc đời mình cho sự
+                nghiệp đấu tranh giành độc lập, tự do và thống nhất Tổ quốc. Đây
+                là biểu tượng cao quý của lòng yêu nước, sự hy sinh cao cả và tinh
+                thần bất khuất của dân tột Việt Nam. Du khách đến viếng thăm không
+                chỉ để dâng hương tưởng niệm, mà còn để thể hiện lòng tri ân sâu
+                sắc đối với những người chiến sĩ đã ngã xuống vì nền hòa bình và
+                độc lập dân tộc. Nghĩa trang liệt sỹ TP.HCM là biểu tượng trường tồn của
+                lòng biết ơn và sự kính trọng đối với những người anh hùng đã viết
+                nên trang sử vàng chói lọi của đất nước.
+              </Text>
+            </View>
+          </View>
         </View>
 
-        {/* Services Section */}
-        <View style={styles.servicesSection}>
-          <Text style={styles.servicesHeader}>
-            Dịch Vụ Của Chúng Tôi
-          </Text>
-          <View style={styles.servicesContainer}>
-            {services.map((service, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={styles.service}
-              >
-                <Text style={styles.icon}>{service.icon}</Text>
-                <View style={styles.serviceContent}>
-                  <Text style={styles.serviceTitle}>{service.title}</Text>
-                  <Text style={styles.serviceDescription}>{service.description}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+        {/* Map Section */}
+        <View style={styles.mapSection}>
+          <View style={styles.titleWrapper}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.dot}>•</Text>
+              <Text style={styles.mapHeader}>Bản đồ nghĩa trang liệt sĩ TP.HCM</Text>
+              <Text style={styles.dot}>•</Text>
+            </View>
+            <View style={styles.underline} />
           </View>
+          <View style={styles.mapContainer}>
+            <Image 
+              source={require('../../../../assets/images/map.png')}
+              style={styles.mapImage}
+              resizeMode="contain"
+            />
+            <TouchableOpacity 
+              style={styles.selectZoneButton}
+              onPress={() => {/* Handle zone selection */}}
+            >
+              <Text style={styles.selectZoneButtonText}>Chọn khu vực</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Trending Services Section */}
+        <View style={styles.servicesSection}>
+          <View style={styles.titleWrapper}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.dot}>•</Text>
+              <Text style={styles.sectionHeader}>Dịch vụ xu hướng</Text>
+              <Text style={styles.dot}>•</Text>
+            </View>
+            <View style={styles.underline} />
+          </View>
+
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#991b1b" />
+            </View>
+          ) : (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.servicesScrollView}
+            >
+              {trendingServices.map((service) => (
+                <TouchableOpacity 
+                  key={service.serviceId} 
+                  style={styles.serviceCard}
+                  onPress={() => {/* Handle service selection */}}
+                >
+                  <Image
+                    source={{ uri: service.imagePath }}
+                    style={styles.serviceImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.serviceInfo}>
+                    <Text style={styles.serviceName}>{service.serviceName}</Text>
+                    <Text style={styles.servicePrice}>
+                      {service.price.toLocaleString()}đ
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -152,21 +202,21 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: "#f3f4f6",
   },
   sliderContainer: {
-    position: 'relative',
-    width: '100%',
+    position: "relative",
+    width: "100%",
     height: 200,
     marginBottom: 0,
   },
   paginationContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 16,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 8,
   },
   paginationDot: {
@@ -175,106 +225,152 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   activeDot: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   inactiveDot: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   introSection: {
-    padding: 24,
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  introTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1f2937",
+    marginBottom: 16,
+  },
+  introContentContainer: {
     backgroundColor: 'white',
     borderRadius: 8,
-    marginHorizontal: 16,
-    marginVertical: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  introHeader: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#059669',
-    paddingLeft: 16,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#059669',
-    fontWeight: 'medium',
-  },
-  description: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 16,
-  },
-  button: {
-    backgroundColor: '#059669',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'semibold',
-    color: 'white',
-  },
-  servicesSection: {
-    padding: 24,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 8,
-    marginHorizontal: 16,
-    marginVertical: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  servicesHeader: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  servicesContainer: {
-    gap: 16,
-  },
-  service: {
-    backgroundColor: 'white',
     padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: '#991b1b',
+  },
+  introContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  introLetter: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#991b1b",
+    marginRight: 4,
+    lineHeight: 36,
+  },
+  introText: {
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#4b5563",
+    textAlign: "justify",
+  },
+  mapSection: {
+    padding: 24,
+    backgroundColor: "#f3f4f6",
     borderRadius: 8,
+    marginHorizontal: 16,
+    marginVertical: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  titleWrapper: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  dot: {
+    color: '#3B82F6',
+    fontSize: 16,
+    marginHorizontal: 8,
+  },
+  mapHeader: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1f2937",
+    textAlign: "center",
+  },
+  underline: {
+    width: 60,
+    height: 1,
+    backgroundColor: '#3B82F6',
+    marginTop: 4,
+  },
+  mapContainer: {
+    alignItems: 'center',
+  },
+  mapImage: {
+    width: '100%',
+    height: 300,
+    marginBottom: 16,
+  },
+  selectZoneButton: {
+    backgroundColor: '#991b1b',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  selectZoneButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  servicesSection: {
+    padding: 16,
+    backgroundColor: '#fff',
+  },
+  servicesScrollView: {
+    paddingVertical: 16,
+    gap: 16,
+  },
+  serviceCard: {
+    width: 200,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginRight: 16,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  icon: {
-    fontSize: 32,
-    marginRight: 16,
+  serviceImage: {
+    width: '100%',
+    height: 150,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
   },
-  serviceContent: {
-    flex: 1,
+  serviceInfo: {
+    padding: 12,
   },
-  serviceTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  serviceName: {
+    fontSize: 16,
+    fontWeight: '500',
     color: '#1f2937',
     marginBottom: 4,
   },
-  serviceDescription: {
-    fontSize: 16,
-    color: '#6b7280',
+  servicePrice: {
+    fontSize: 14,
+    color: '#991b1b',
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 
